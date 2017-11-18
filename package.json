@@ -1,0 +1,72 @@
+{
+  "name": "midi-controlled",
+  "version": "0.0.0",
+  "description": "Map midi messages to didpatch any atom command or script",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/tuomashatakka/midi-controlled.git"
+  },
+  "keywords": [
+    "midi",
+    "macro",
+    "controller",
+    "control",
+    "quick",
+    "keypress",
+    "dispatch",
+    "event",
+    "tool",
+    "utility",
+    "toolbar"
+  ],
+  "author": "tuomashatakka",
+  "license": "MIT",
+  "styles": [
+    "styles/index.less"
+  ],
+  "engines": {
+    "atom": ">=1.17.0 <2.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/tuomashatakka/midi-controlled/issues"
+  },
+  "homepage": "https://github.com/tuomashatakka/midi-controlled#readme",
+  "dependencies": {
+    "autobind-decorator": "^2.1.0",
+    "es6-symbol": "^3.1.1",
+    "event-kit": "^2.4.0",
+    "node-watch": "^0.5.5"
+  },
+  "devDependencies": {
+    "@tuomashatakka/eslint-config": "^0.1.7",
+    "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-preset-react": "^6.24.1",
+    "chalk": "^2.2.0",
+    "eslint": "^3.19.0",
+    "eslint-plugin-flowtype": "^2.39.1",
+    "eslint-plugin-react": "^7.4.0",
+    "flow-bin": "^0.55.0"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@tuomashatakka"
+    ],
+    "globals": {
+      "atom": true
+    }
+  },
+  "babel": {
+    "presets": [
+      "react"
+    ],
+    "plugins": [
+      "transform-object-rest-spread",
+      "transform-decorators-legacy"
+    ]
+  }
+}

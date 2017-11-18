@@ -1,0 +1,7 @@
+{
+  "map": {
+    "title": "MIDI Message mappings",
+    "type": "string",
+    "default": "{}"
+  }
+}
