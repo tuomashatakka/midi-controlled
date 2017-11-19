@@ -2,6 +2,7 @@
 
 import { info } from './print'
 import MIDIHandler from './models/MIDIHandler'
+import Entry from './models/MapEntry'
 
 export default class MIDIService {
 
@@ -34,15 +35,18 @@ export default class MIDIService {
   }
 
   async defineHandler () {
-    let editor = await atom.workspace.open()
+    let entry  = new Entry({ note: null })
+    let editor = await atom.workspace.open(entry)
+    let view   = atom.views.getView(entry)
     let listen = new Promise(resolve => {
-      const apply = () => {
-        let key = editor.lineTextForBufferRow(0)
-        let content = editor.getText().replace(/^.*?\n/, '')
-        once.dispose()
+      console.log(editor, entry, view)
+      const apply = (data) => {
+        console.log(data)
+        let key = data.note
+        let content = data.callback
         resolve({ key, content })
       }
-      let once = atom.workspace.onWillDestroyPaneItem(apply)
+      view.onDidSubmit(apply)
     })
 
     console.warn("Handler definition declared", await listen)
