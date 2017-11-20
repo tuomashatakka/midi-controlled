@@ -1,7 +1,6 @@
 'use babel'
 
 import { CompositeDisposable } from 'atom'
-import View from './views/MapEntryEditor'
 
 import MIDIService from './service'
 

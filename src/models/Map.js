@@ -19,7 +19,8 @@ export default class MIDIMap {
 
   add (note, command) {
     let entry  = new Entry({ note }, command)
-    let subscr = this.host.onNoteInput(entry.key, entry.call)
+    let subscr = this.host.onKeyDown(entry.key, entry.call)
+    // let subscr = this.host.onKeyUp(entry.key, entry.call)
 
     this[subscriptions].add(subscr)
     this.entries.add(entry)

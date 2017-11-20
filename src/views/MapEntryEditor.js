@@ -1,11 +1,18 @@
 const Entry = require('../models/MapEntry')
 const { Emitter } = require('event-kit')
 
+let signal = new Emitter()
+
 class MapEntryElement extends HTMLElement {
 
-  connectedCallback () {
-    this.emitter = this.emitter || new Emitter()
+  /* eslint-disable class-methods-use-this */
+  get emitter () { return signal }
+  getTitle () { return 'Lörssön löö' }
+  dispatch () { return signal.emit.apply(signal, arguments) }
+  listen () { return signal.on.apply(signal, arguments) }
+  /* eslint-enable class-methods-use-this */
 
+  connectedCallback () {
     let form         = document.createElement('form')
     let note         = document.createElement('atom-text-editor')
     let editor       = document.createElement('atom-text-editor')
@@ -14,10 +21,10 @@ class MapEntryElement extends HTMLElement {
     let saveButton   = document.createElement('button')
     let cancelButton = document.createElement('button')
 
-    note.name = 'note'
-    editor.name = 'callback'
-    header.innerHTML = `<h3>MIDI Callback</h3>`
-    saveButton.innerHTML = `Apply`
+    note.name              = 'key'
+    editor.name            = 'content'
+    header.innerHTML       = `<h3>MIDI Callback</h3>`
+    saveButton.innerHTML   = `Apply`
     cancelButton.innerHTML = `Cancel`
 
     cancelButton.setAttribute('class', 'btn btn-error')
@@ -43,9 +50,10 @@ class MapEntryElement extends HTMLElement {
 
   submit () {
     let data = this.toJSON()
-    this.emitter.emit('will-submit', data)
+    atom.notifications.addSuccess('Submitting a callback for the event ' + data.key)
+    this.dispatch('will-submit', data)
     this.close()
-    this.emitter.emit('did-submit', data)
+    this.dispatch('did-submit', data)
   }
 
   close () {
@@ -54,11 +62,7 @@ class MapEntryElement extends HTMLElement {
       return
     if (pane.getActiveItem() === this.model)
       pane.destroyActiveItem()
-    this.emitter.emit('did-close')
-  }
-
-  getTitle () {
-    return 'Lörssön löö'
+    this.dispatch('did-close')
   }
 
   toJSON () {
@@ -69,9 +73,10 @@ class MapEntryElement extends HTMLElement {
     return data
   }
 
-  onWillSubmit (callback) { this.emitter.on('will-submit', callback) }
-  onDidSubmit (callback) { this.emitter.on('did-submit', callback) }
-  onDidClose (callback) { this.emitter.on('did-close', callback) }
+
+  onWillSubmit (callback) { this.listen('will-submit', callback) }
+  onDidSubmit (callback) { this.listen('did-submit', callback) }
+  onDidClose (callback) { this.listen('did-close', callback) }
 
   static provide (instance) {
     let editor      = document.createElement(MapEntryElement.tagName)

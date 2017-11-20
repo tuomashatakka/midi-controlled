@@ -14,9 +14,6 @@ export default class MapEntry {
     this.message  = new MIDIMessage(options)
     this.source   = src
     this.id       = generate_id()
-
-    let callback  = composeCallback(this)
-    callbacks.set(this, callback)
   }
 
   getTitle () {
@@ -27,21 +24,28 @@ export default class MapEntry {
     return this.message.note
   }
 
-  get callback () {
+  @self
+  async getCallback () {
+    if (!callbacks.has(this))
+      callbacks.set(this, await composeCallback(this))
     return callbacks.get(this)
   }
 
   @self
   async call () {
-    let fn = await this.callback
+    let fn = await this.getCallback()
+    atom.notifications.addSuccess("Dispatching a callback for " + this.key)
+    console.info("fn =", fn)
     return fn(this)
   }
 
+  @self
   openScriptFile () {
     let path = resolve(getDirectory(), this.filename)
     atom.workspace.open(path)
   }
 
+  @self
   toJSON () {
     return this.message.toJSON()
   }
