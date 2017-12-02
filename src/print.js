@@ -2,41 +2,49 @@
 function warn () {
   try {
     const chalk = require('chalk')
-    console.warn(chalk.hex('#e03045')(...arguments))
+    console.warn(chalk.hex('#e03045')(...arguments)) // eslint-disable-line no-console
   }
   catch (err) {
-    console.warn(...arguments)
+    console.warn(...arguments) // eslint-disable-line no-console
   }
 }
 
 function info () {
   try {
-    const chalk = require('chalk')
-    console.log(chalk.hex('#4eada5')(...arguments))
+    msg('#3d63e8', ...arguments)
   }
   catch (err) {
-    console.log(...arguments)
+    console.log(...arguments) // eslint-disable-line no-console
   }
 }
 
 function success () {
   try {
-    const chalk = require('chalk')
-    console.log(chalk.hex('#4eada5')(...arguments))
+    msg('#4eada5', ...arguments)
   }
   catch (err) {
-    console.info(...arguments)
+    console.info(...arguments) // eslint-disable-line no-console
   }
 }
 
 function failed () {
   try {
-    const chalk = require('chalk')
-    console.log(chalk.hex('#f2286b')(...arguments))
+    msg('#f2286b', ...arguments)
   }
   catch (err) {
-    console.info(...arguments)
+    console.info(...arguments) // eslint-disable-line no-console
   }
+}
+
+function msg () {
+  let items = [ ...arguments ]
+  const color = items.shift()
+  const chalk = require('chalk')
+  return items.map(item =>
+    typeof item === 'string'
+    ? chalk.hex(color)(item)
+    : item
+  )
 }
 
 module.exports = {
