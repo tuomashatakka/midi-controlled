@@ -3,34 +3,38 @@
 import { CompositeDisposable } from 'atom'
 
 import MIDIService from './service'
+import registerView from './views/MapEntryEditor'
 
+
+let service
 let subscriptions
-
-export let service
 
 export const config = require('../config.json')
 
-const addHandler    = () => service.defineHandler()
-
-const clearHandlers = () => service.clearHandlers()
+export function deactivate () {
+  subscriptions.dispose()
+}
 
 export function activate () {
   service = new MIDIService()
   subscriptions = new CompositeDisposable()
   subscriptions.add(
     service,
-    atom.commands.add('atom-workspace', 'midi-controlled:restart', restartService),
-    atom.commands.add('atom-workspace', 'midi-controlled:add-handler', addHandler),
-    atom.commands.add('atom-workspace', 'midi-controlled:clear-handlers', clearHandlers)
+    registerView(),
+    defineCommand('learn', toggleMIDILearn),
+    defineCommand('add-handler', addHandler),
+    defineCommand('clear-handlers', clearHandlers),
+    defineCommand('restart', restartService)
   )
 }
 
-export function deactivate () {
-  service.stop()
-  subscriptions.dispose()
-}
+const defineCommand = (name, callback) =>
+  atom.commands.add('atom-workspace', 'midi-controlled:' + name, callback)
 
-export function restartService () {
-  if (service)
-    service.restart()
-}
+
+const toggleMIDILearn = () => service.toggleMIDILearn()
+const addHandler      = () => service.defineHandler()
+const clearHandlers   = () => service.clearHandlers()
+const restartService  = () => service ?
+  (service.restart()) :
+  (service = new MIDIService())

@@ -49,11 +49,9 @@ class MapEntryElement extends HTMLElement {
   }
 
   submit () {
-    let data = this.toJSON()
-    atom.notifications.addSuccess('Submitting a callback for the event ' + data.key)
-    this.dispatch('will-submit', data)
+    this.dispatch('submit', this.toJSON())
     this.close()
-    this.dispatch('did-submit', data)
+    this.dispatch('did-submit', this.model)
   }
 
   close () {
@@ -65,6 +63,10 @@ class MapEntryElement extends HTMLElement {
     this.dispatch('did-close')
   }
 
+  getMessage () {
+    return this.model.message
+  }
+
   toJSON () {
     let elements = [ ...this.querySelectorAll('atom-text-editor') ]
     let data = {}
@@ -74,14 +76,22 @@ class MapEntryElement extends HTMLElement {
   }
 
 
-  onWillSubmit (callback) { this.listen('will-submit', callback) }
-  onDidSubmit (callback) { this.listen('did-submit', callback) }
-  onDidClose (callback) { this.listen('did-close', callback) }
+  onSubmit (callback) {
+    return this.listen('will-submit', callback)
+  }
+
+  onDidSubmit (callback) {
+    return this.listen('did-submit', callback)
+  }
+
+  onDidClose (callback) {
+    return this.listen('did-close', callback)
+  }
 
   static provide (instance) {
     let editor      = document.createElement(MapEntryElement.tagName)
-    instance.editor = editor
     editor.model    = instance
+    // instance.editor = editor
     return editor
   }
 
@@ -124,6 +134,12 @@ function findElement (root, tagName) {
 }
 
 
-MapEntryElement.registerElement()
-atom.views.addViewProvider(Entry, MapEntryElement.provide)
-module.exports = MapEntryElement
+module.exports = function registerView () {
+  MapEntryElement.registerElement()
+  let subscription = atom.views.addViewProvider(
+    Entry,
+    MapEntryElement.provide)
+  console.log("subscription", subscription)
+  return subscription
+}
+module.exports.view = MapEntryElement

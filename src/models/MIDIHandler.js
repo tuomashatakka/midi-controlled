@@ -13,38 +13,62 @@ import Message from './MIDIMessage'
 
 const signal = Symbol('midi-events-handler')
 
-export default class MIDIHandler {
+export default class MIDIEventHandler {
+
+  static LEARN_EVENT_LABEL = 'learn'
+  static MESSAGE_EVENT_LABEL = 'message'
 
   constructor (midi) {
+    this.learnActive = false
     this[signal]  = new Emitter()
-    this.mappings = new CallbackManager(this)
     this.registry = new Devices(midi)
-    this.registry.onInput(this.dispatch)
-    this.registry.onStateChange(state => {
-      console.info(state)
-      atom.notifications.addInfo('MIDI State change event occurred. State changed to ' + state)
-    })
-    this.previous = {}
+    this.mappings = new CallbackManager(this)
+
+    const formatRegistry = () => {
+      this.registry.destroy()
+      this.registry.onInput(this.dispatch)
+      this.registry.onStateChange(state => {
+        console.info(state)
+        formatRegistry()
+        new Notification('MIDI State change event occurred. State changed to ' + state)
+      })
+    }
+
+    formatRegistry()
+  }
+
+  enableLearn (handleLearn) {
+    this.learnActive = true
+    this.learnHandlerSubscription =
+      this.registerLearnHandler(handleLearn)
+  }
+
+  disableLearn () {
+    this.learnActive = false
+    if (this.learnHandlerSubscription)
+      this.learnHandlerSubscription.dispose()
   }
 
   onKeyDown (note, callback) {
-    note = parseInt(note)
-    let assertNote = message => {
-      console.log("parseInt(message.note) === note", parseInt(message.note) === note, parseInt(message.note), note)
-      return parseInt(message.note) === note &&
-      message.type > 128 &&
-      message.velocity > 0
-    }
-    return this.registerWithCondition('message', callback, assertNote)
+    let condition = assertNote(parseInt(note))
+    return this.registerWithCondition(MIDIEventHandler.MESSAGE_EVENT_LABEL, callback, condition)
   }
 
   onKeyUp (note, callback) {
-    note = parseInt(note)
-    let assertNoteup = message =>
-      parseInt(message.note) === note &&
-      message.type > 128 &&
-      message.velocity === 0
-    return this.registerWithCondition('message', callback, assertNoteup)
+    let condition = assertNoteup(parseInt(note))
+    return this.registerWithCondition(MIDIEventHandler.MESSAGE_EVENT_LABEL, callback, condition)
+  }
+
+  @self
+  registerLearnHandler (callback) {
+    let eventName = MIDIEventHandler.LEARN_EVENT_LABEL
+    return this[signal].on(eventName, callback)
+  }
+
+  @self
+  registerWithCondition (eventName, callback, ...filters) {
+    let handler = constructConditionalCallback(callback, ...filters)
+    return this[signal].on(eventName, handler)
   }
 
   onDidDestroy (callback) {
@@ -54,20 +78,11 @@ export default class MIDIHandler {
   @self
   dispatch (device, event) {
     let message = Message.from(event)
-    this[signal].emit('message', message)
-    this.previous = message
+    let eventName = this.learnActive ?
+      MIDIEventHandler.LEARN_EVENT_LABEL :
+      MIDIEventHandler.MESSAGE_EVENT_LABEL
+    this[signal].emit(eventName, message)
     new Notification(`Received MIDI ∫${message.note} ▸ ${message.velocity}`)
-  }
-
-  @self
-  registerWithCondition (eventName, callback, ...filters) {
-    let handler = constructConditionalCallback(callback, ...filters)
-    return this[signal].on(eventName, handler)
-  }
-
-  @self
-  registerWithParams (eventName, params, callback) {
-    return this[signal].on(eventName, (args) => callback(args))
   }
 
   get disposed () {
@@ -99,6 +114,19 @@ function constructConditionalCallback (callback, ...filters) {
   }
 }
 
+let assertNote = note => message =>
+  parseInt(message.note) === note &&
+    message.type > 128 &&
+    message.velocity > 0
+
+let assertNoteup = note => message =>
+  parseInt(message.note) === note &&
+  message.type > 128 &&
+  message.velocity === 0
+
+
+
+// FIXME: Move to own file
 class Notification {
   constructor (message) {
     let type = 'info'

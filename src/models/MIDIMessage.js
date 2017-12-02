@@ -1,28 +1,29 @@
 'use babel'
-import { type, MessageContentEnum } from '../definitions'
+import { MessageContentEnum } from '../definitions'
 
 
 export default class MIDIMessage {
 
   static from (raw) {
+    if (raw instanceof MIDIMessage)
+      return raw
     let data = parseMessage(raw)
     return new MIDIMessage(data)
   }
 
   constructor (data) {
-    this.type = null
-    this.note = null
-    this.channel = null
-    this.velocity = null
-    Object.assign(this, data)
+    this.type     = parseInt(data.type)
+    this.note     = parseInt(data.note)
+    this.channel  = parseInt(data.channel)
+    this.velocity = parseInt(data.velocity)
   }
 
   toJSON () {
     return {
-      type: this.type,
-      note: this.note,
+      type:     this.type,
+      note:     this.note,
+      channel:  this.channel,
       velocity: this.velocity,
-      channel: this.channel,
     }
   }
 }

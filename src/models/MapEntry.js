@@ -2,6 +2,7 @@
 
 import self from 'autobind-decorator'
 import { resolve } from 'path'
+import { CompositeDisposable } from 'event-kit'
 import { composeCallback, getDirectory } from '../dispatch'
 import MIDIMessage from './MIDIMessage'
 
@@ -11,9 +12,21 @@ export default class MapEntry {
 
   constructor (options, src) {
     this.filename = 'note' + options.note
-    this.message  = new MIDIMessage(options)
+    this.message  = resolveMessage(options)
     this.source   = src
     this.id       = generate_id()
+  }
+
+  update (src) {
+    if (src.command)
+      this.source = src.command
+    if (src.key)
+      this.message.note = src.key
+  }
+
+  save (map) {
+    map = map || this.host.mappings
+    map.add(this)
   }
 
   getTitle () {
@@ -35,14 +48,21 @@ export default class MapEntry {
   async call () {
     let fn = await this.getCallback()
     atom.notifications.addSuccess("Dispatching a callback for " + this.key)
-    console.info("fn =", fn)
     return fn(this)
   }
 
   @self
-  openScriptFile () {
-    let path = resolve(getDirectory(), this.filename)
-    atom.workspace.open(path)
+  async openScriptFile () {
+    let dir = getDirectory()
+    let path = resolve(dir.getPath(), this.filename)
+    let editor = await atom.workspace.open(path)
+    let subscriptions = new CompositeDisposable()
+    let handleSave = () => this.save()
+    let handleClose = () => subscriptions.dispose()
+    subscriptions.add(
+      editor.onDidSave(handleSave),
+      editor.onDidDestroy(handleClose)
+    )
   }
 
   @self
@@ -51,4 +71,9 @@ export default class MapEntry {
   }
 }
 
-const generate_id = () => '_' + parseInt(Math.random() * 1000000000).toString(25)
+const resolveMessage = (data) =>
+  data instanceof MIDIMessage ?
+    data : new MIDIMessage(data)
+
+const generate_id = () =>
+  '_' + parseInt(Math.random() * 1000000000).toString(25)

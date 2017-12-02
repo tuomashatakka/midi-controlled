@@ -14,29 +14,29 @@ export default class MIDIMap {
   constructor (host) {
     this.host = host
     this[subscriptions] = new CompositeDisposable()
-    this.load()
+    this.load(atom.config.get(CONFIG_DESCRIPTOR))
   }
 
-  add (note, command) {
-    let entry  = new Entry({ note }, command)
+  add (entry) {
     let subscr = this.host.onKeyDown(entry.key, entry.call)
     // let subscr = this.host.onKeyUp(entry.key, entry.call)
 
+    entry.host = this.host
     this[subscriptions].add(subscr)
     this.entries.add(entry)
     this.save()
   }
 
-  load () {
-    let noteonHandlers = atom.config.get(CONFIG_DESCRIPTOR)
+  load (data) {
+    let noteonHandlers = data
     for (let note in noteonHandlers)
-      this.add(note, noteonHandlers[note])
+      this.add(new Entry({ note }, noteonHandlers[note]))
     console.log("Entries", ...this.entries)
   }
 
   save () {
     let serializedHandlers = this.toJSON()
-    console.log(serializedHandlers)
+    console.log("serializedHandlers", serializedHandlers)
     atom.config.set(CONFIG_DESCRIPTOR, serializedHandlers)
   }
 
